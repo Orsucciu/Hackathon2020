@@ -1,0 +1,17 @@
+qgis avec grass
+
+sig 
+
+db topo
+
+modele fidele 
+relief > cadastre > batiments
+
+recupere cadastre 
+archicad
+format dwg
+db topo ign hauteur
+
+source open
+format stl en sortie
+
