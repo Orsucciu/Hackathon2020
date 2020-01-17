@@ -38,7 +38,7 @@ import time
 
 iface.mainWindow().blockSignals(True)
 
-zlayer = ""
+ZLAYER = 0
 
 
 class App(QWidget):
@@ -174,9 +174,9 @@ def importFirstDXF():
 
         if layer.isValid() is True:
             print("Layer was loaded successfully!")
-            global zlayer
-            zlayer = QgsProject.instance().mapLayersByName(dxfName)[0]
-            iface.setActiveLayer(zlayer)
+            global ZLAYER
+            ZLAYER = QgsProject.instance().mapLayersByName(dxfName)[0]
+            iface.setActiveLayer(ZLAYER)
             iface.zoomToActiveLayer()
         else:
             print("Unable to read basename and file path - Your string is probably invalid")
@@ -213,5 +213,5 @@ time.sleep(2.0)
 importAllShapes()
 time.sleep(2.0) 
 iface.mainWindow().blockSignals(False)
-iface.setActiveLayer(zlayer)
+iface.setActiveLayer(ZLAYER)
 iface.zoomToActiveLayer()
