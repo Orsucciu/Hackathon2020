@@ -35,6 +35,8 @@ import processing
 import sys, os
 import requests
 
+iface.mainWindow().blockSignals(True)
+
 class App(QWidget):
 
     def __init__(self):
@@ -96,9 +98,13 @@ def importFirstTif():
         path = fileInfo.filePath()
         basename = fileInfo.baseName()
         layer = QgsRasterLayer(path, basename)
+        crs = layer.crs()
+        crs.createFromId(4326)
+        layer.setCrs(crs)
+        #crs = QgsCoordinateReferenceSystem(4326, QgsCoordinateReferenceSystem.EpsgCrsId)
         #layer.setCrs(QgsCoordinateReferenceSystem(CRS_ID, QgsCoordinateReferenceSystem.EpsgCrsId))
         #for unknow reasons, the tif has a different Crs, but is lambert. OK.
-        layer.setCrs(QgsCoordinateReferenceSystem(4326, QgsCoordinateReferenceSystem.EpsgCrsId))
+        #layer.setCrs()
         
         QgsProject.instance().addMapLayer(layer)
         
@@ -188,3 +194,4 @@ importFirstTif()
 downloadMap()
 importFirstDXF()
 importAllShapes()
+iface.mainWindow().blockSignals(False)
