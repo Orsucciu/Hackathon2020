@@ -19,5 +19,7 @@ if len(argv) >= 2:
 else:
     outputfile = argv[0] + ".stl"
 
+bpy.ops.wm.read_factory_settings(use_empty=True)
+
 bpy.ops.import_scene.gltf(filepath=inputfile)
 bpy.ops.export_mesh.stl(filepath=outputfile)

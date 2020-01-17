@@ -27,6 +27,10 @@ from qgis.core import (QgsProcessing,
                        QgsProject,
                        QgsVectorLayer,
                        QgsCoordinateReferenceSystem)
+                       
+from qgis.utils import iface
+from qgis.gui import *
+
 import processing
 import sys, os
 import requests
@@ -47,7 +51,7 @@ class App(QWidget):
         self.setGeometry(self.left, self.top, self.width, self.height)
         
         self.getInteger()
-        self.getText()
+        #self.getText()
         
         self.show()
         
@@ -153,6 +157,9 @@ def importFirstDXF():
         
         if layer.isValid() is True:
             print("Layer was loaded successfully!")
+            box = layer.boundingBoxOfSelected()
+            iface.mapCanvas().setExtent(box)
+            iface.mapCanvas().refresh()
         else:
             print("Unable to read basename and file path - Your string is probably invalid")
         
