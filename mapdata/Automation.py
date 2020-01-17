@@ -37,8 +37,10 @@ def importFirstTif():
             tifName = file
             break
     
+    print("TIFNAME : " + tifName)
+    
     try:
-        fileInfo = QFileInfo(tifName)
+        fileInfo = QFileInfo(WORKDIR + tifName)
         path = fileInfo.filePath()
         basename = fileInfo.baseName()
         layer = QgsRasterLayer(path, basename)
