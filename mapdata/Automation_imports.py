@@ -52,7 +52,7 @@ class App(QWidget):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
         
-        self.getInteger()
+        #self.getInteger()
         #self.getText()
         
         self.show()
@@ -63,9 +63,11 @@ class App(QWidget):
             if i > 1:
                 CRS_ID = i
                 print(i)
+				return CRS_ID
             else: 
                 CRS_ID = 2154
                 print(i)
+				return CRS_ID
 
     def getText(self):
         text, okPressed = QInputDialog.getText(self, "WORKDIR","Input your workfolder :", QLineEdit.Normal, "")
@@ -74,12 +76,12 @@ class App(QWidget):
             if len(text) > 3:
                 WORKDIR = text
                 print(text)
+				return WORKDIR
             else:
                 WORKDIR = "C:/Users/theo1/Documents/GitHub/Hackathon2020/mapdata/"
                 print(text)
+				return WORKDIR
 
-WORKDIR = "C:/Users/theo1/Documents/GitHub/Hackathon2020/mapdata/"
-CRS_ID = 2154 # CRS id we'll apply to all layers. This is lambert
 
 def importFirstTif():
     # import the first Tif found in this folder
@@ -188,6 +190,8 @@ def downloadMap():
 app = QApplication(sys.argv)
 ex = App()
 ex.close()
+CRS_ID = ex.getInteger()
+WORKDIR = ex.getText()
 #sys.exit(app.exec_())
 
 importFirstTif()
