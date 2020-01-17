@@ -64,11 +64,46 @@ def importAllShapes():
             shapes.append(file)
     
     try:
-        for shape in shapes:
-            print(shape)
+        for shapeF in shapes:
+            print(WORKDIR + "shapes/" + shapeF)
+            
+            path_to_ports_layer = WORKDIR + "shapes/" + shapeF
+
+            # The format is:
+            # vlayer = QgsVectorLayer(data_source, layer_name, provider_name)
+
+            vlayer = QgsVectorLayer(path_to_ports_layer, shapeF, "ogr")
+            QgsProject.instance().addMapLayer(vlayer)
+            if not vlayer.isValid():
+                print("Layer failed to load!")
         
     except:
         "An error occured when loading the shapes files"
 
+def importFirstDXF():
+    # import the first Tif found in this folder
+    localfolder = os.listdir(WORKDIR)
+    dxfName = ""
+    
+    for file in localfolder:
+        if file[-4:] == ".dxf" or file[-4:] == ".DXF":
+            dxfName = file
+            break
+    
+    try:
+
+        layer = QgsVectorLayer(WORKDIR + file + "|layername=entities|geometrytype=LineString", file, "ogr")
+        QgsProject.instance().addMapLayer(layer)
+        
+        if layer.isValid() is True:
+            print("Layer was loaded successfully!")
+        else:
+            print("Unable to read basename and file path - Your string is probably invalid")
+        
+    except Error as e:
+        print("Error loading raster file")
+        print(e)
+
 importFirstTif()
+importFirstDXF()
 importAllShapes()
