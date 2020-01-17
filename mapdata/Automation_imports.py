@@ -51,17 +51,25 @@ class App(QWidget):
         self.show()
         
     def getInteger(self):
-        i, okPressed = QInputDialog.getInt(self, "CRS ID","Input a valid CRS ID:", 28, 0, 999999999, 1)
+        i, okPressed = QInputDialog.getInt(self, "CRS ID","Input a valid CRS ID:", 2154, 0, 999999, 1)
         if okPressed:
-            CRS_ID = i
-            print(i)
+            if i > 1:
+                CRS_ID = i
+                print(i)
+            else: 
+                CRS_ID = 2154
+                print(i)
 
     def getText(self):
         text, okPressed = QInputDialog.getText(self, "WORKDIR","Input your workfolder :", QLineEdit.Normal, "")
-        if okPressed and text != '':
-            WORKDIR = text
-            print(text)
-            
+        # get path. Must be an absolute path !
+        if okPressed and text != '' :
+            if len(text) > 3:
+                WORKDIR = text
+                print(text)
+            else:
+                WORKDIR = "C:/Users/theo1/Documents/GitHub/Hackathon2020/mapdata/"
+                print(text)
 
 WORKDIR = "C:/Users/theo1/Documents/GitHub/Hackathon2020/mapdata/"
 CRS_ID = 2154 # CRS id we'll apply to all layers. This is lambert
@@ -83,7 +91,9 @@ def importFirstTif():
         path = fileInfo.filePath()
         basename = fileInfo.baseName()
         layer = QgsRasterLayer(path, basename)
-        layer.setCrs(QgsCoordinateReferenceSystem(CRS_ID, QgsCoordinateReferenceSystem.EpsgCrsId))
+        #layer.setCrs(QgsCoordinateReferenceSystem(CRS_ID, QgsCoordinateReferenceSystem.EpsgCrsId))
+        #for unknow reasons, the tif has a different Crs, but is lambert. OK.
+        layer.setCrs(QgsCoordinateReferenceSystem(4326, QgsCoordinateReferenceSystem.EpsgCrsId))
         
         QgsProject.instance().addMapLayer(layer)
         
@@ -149,10 +159,26 @@ def importFirstDXF():
         print("Error loading raster file")
         print(e)
 
+
+def downloadMap():
+    try:
+        urlWithParams = 'type=xyz&url=https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'
+        rlayer = QgsRasterLayer(urlWithParams, 'Google Satellite', 'wms')  
+
+        if rlayer.isValid():
+            QgsProject.instance().addMapLayer(rlayer)
+        else:
+            print('invalid layer')
+    except Exception as e:
+        print("Uh nuh itz bwoken :(")
+        print(e)
+        
+
 app = QApplication(sys.argv)
 ex = App()
-sys.exit(app.exec_())
+#sys.exit(app.exec_())
 
 importFirstTif()
+downloadMap()
 importFirstDXF()
 importAllShapes()
