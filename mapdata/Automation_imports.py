@@ -174,6 +174,7 @@ def downloadMap():
 
 app = QApplication(sys.argv)
 ex = App()
+ex.close()
 #sys.exit(app.exec_())
 
 importFirstTif()
