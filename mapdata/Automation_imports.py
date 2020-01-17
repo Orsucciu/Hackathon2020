@@ -213,6 +213,5 @@ time.sleep(2.0)
 importAllShapes()
 time.sleep(2.0) 
 iface.mainWindow().blockSignals(False)
-global zlayer
 iface.setActiveLayer(zlayer)
 iface.zoomToActiveLayer()
