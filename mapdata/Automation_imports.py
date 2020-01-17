@@ -29,6 +29,7 @@ from qgis.core import (QgsProcessing,
                        QgsCoordinateReferenceSystem)
 import processing
 import sys, os
+import requests
 
 class App(QWidget):
 
@@ -162,15 +163,12 @@ def importFirstDXF():
 
 def downloadMap():
     try:
-        urlWithParams = 'type=xyz&url=https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}'
-        rlayer = QgsRasterLayer(urlWithParams, 'Google Satellite', 'wms')  
-
-        if rlayer.isValid():
-            QgsProject.instance().addMapLayer(rlayer)
-        else:
-            print('invalid layer')
+        service_url = "mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" 
+        service_uri = "type=xyz&zmin=0&zmax=21&url=https://"+requests.utils.quote(service_url)
+        tms_layer = QgsRasterLayer(service_uri, "Google Satellite", "wms")
+        tms_later = QgsProject.instance().addMapLayer(tms_layer)
     except Exception as e:
-        print("Uh nuh itz bwoken :(")
+        print("Map failed :(")
         print(e)
         
 
