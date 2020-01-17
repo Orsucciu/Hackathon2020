@@ -12,8 +12,8 @@
 """
 
 from PyQt5.QtCore import (QCoreApplication,
-                        QFileInfo,
-                        QSettings)
+                          QFileInfo,
+                          QSettings)
 
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit
 
@@ -27,15 +27,19 @@ from qgis.core import (QgsProcessing,
                        QgsProject,
                        QgsVectorLayer,
                        QgsCoordinateReferenceSystem)
-                       
+
 from qgis.utils import iface
 from qgis.gui import *
 
 import processing
 import sys, os
 import requests
+import time
 
 iface.mainWindow().blockSignals(True)
+
+zlayer = ""
+
 
 class App(QWidget):
 
@@ -47,54 +51,55 @@ class App(QWidget):
         self.width = 640
         self.height = 480
         self.initUI()
-    
+
     def initUI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
-        
-        #self.getInteger()
-        #self.getText()
-        
+
+        # self.getInteger()
+        # self.getText()
+
         self.show()
-        
+
     def getInteger(self):
-        i, okPressed = QInputDialog.getInt(self, "CRS ID","Input a valid CRS ID:", 2154, 0, 999999, 1)
+        i, okPressed = QInputDialog.getInt(self, "CRS ID", "Input a valid CRS ID:", 2154, 0, 999999, 1)
         if okPressed:
             if i > 1:
                 CRS_ID = i
                 print(i)
-				return CRS_ID
-            else: 
-                CRS_ID = 2154
-                print(i)
-				return CRS_ID
+                return CRS_ID
+        else:
+            CRS_ID = 2154
+            print(i)
+            return CRS_ID
+
 
     def getText(self):
-        text, okPressed = QInputDialog.getText(self, "WORKDIR","Input your workfolder :", QLineEdit.Normal, "")
+        text, okPressed = QInputDialog.getText(self, "WORKDIR", "Input your workfolder :", QLineEdit.Normal, "")
         # get path. Must be an absolute path !
-        if okPressed and text != '' :
+        if okPressed and text != '':
             if len(text) > 3:
                 WORKDIR = text
                 print(text)
-				return WORKDIR
-            else:
-                WORKDIR = "C:/Users/theo1/Documents/GitHub/Hackathon2020/mapdata/"
-                print(text)
-				return WORKDIR
+                return WORKDIR
+        else:
+            WORKDIR = "C:/Users/theo1/Documents/GitHub/Hackathon2020/mapdata/"
+            print(text)
+            return WORKDIR
 
 
 def importFirstTif():
     # import the first Tif found in this folder
     localfolder = os.listdir(WORKDIR)
     tifName = ""
-    
+
     for file in localfolder:
         if file[-4:] == ".tif" or file[-4:] == ".TIF":
             tifName = file
             break
-    
+
     print("TIFNAME : " + tifName)
-    
+
     try:
         fileInfo = QFileInfo(WORKDIR + tifName)
         path = fileInfo.filePath()
@@ -103,36 +108,37 @@ def importFirstTif():
         crs = layer.crs()
         crs.createFromId(4326)
         layer.setCrs(crs)
-        #crs = QgsCoordinateReferenceSystem(4326, QgsCoordinateReferenceSystem.EpsgCrsId)
-        #layer.setCrs(QgsCoordinateReferenceSystem(CRS_ID, QgsCoordinateReferenceSystem.EpsgCrsId))
-        #for unknow reasons, the tif has a different Crs, but is lambert. OK.
-        #layer.setCrs()
-        
+        # crs = QgsCoordinateReferenceSystem(4326, QgsCoordinateReferenceSystem.EpsgCrsId)
+        # layer.setCrs(QgsCoordinateReferenceSystem(CRS_ID, QgsCoordinateReferenceSystem.EpsgCrsId))
+        # for unknow reasons, the tif has a different Crs, but is lambert. OK.
+        # layer.setCrs()
+
         QgsProject.instance().addMapLayer(layer)
-        
+
         if layer.isValid() is True:
             print("Layer was loaded successfully!")
         else:
             print("Unable to read basename and file path - Your string is probably invalid")
-        
+
     except Error as e:
         print("Error loading raster file")
         print(e)
 
+
 def importAllShapes():
     # import all the shp files in the shapes folder
-    #print(os.listdir(WORKDIR))
+    # print(os.listdir(WORKDIR))
     shapesfolder = os.listdir(WORKDIR + '/shapes/')
     shapes = []
-    
+
     for file in shapesfolder:
         if file[-4:] == ".SHP" or file[-4:] == ".shp":
             shapes.append(file)
-    
+
     try:
         for shapeF in shapes:
             print(WORKDIR + "shapes/" + shapeF)
-            
+
             path_to_ports_layer = WORKDIR + "shapes/" + shapeF
 
             # The format is:
@@ -143,34 +149,38 @@ def importAllShapes():
             QgsProject.instance().addMapLayer(vlayer)
             if not vlayer.isValid():
                 print("Layer failed to load!")
-        
+
     except:
         "An error occured when loading the shapes files"
+
 
 def importFirstDXF():
     # import the first Tif found in this folder
     localfolder = os.listdir(WORKDIR)
     dxfName = ""
-    
+
     for file in localfolder:
         if file[-4:] == ".dxf" or file[-4:] == ".DXF":
             dxfName = file
             break
-    
-    try:
 
-        layer = QgsVectorLayer(WORKDIR + file + "|layername=entities|geometrytype=LineString", file, "ogr")
+    try:
+        print(WORKDIR)
+        print(dxfName)
+        print(file)
+        layer = QgsVectorLayer(WORKDIR + dxfName + "|layername=entities|geometrytype=LineString", file, "ogr")
         layer.setCrs(QgsCoordinateReferenceSystem(CRS_ID, QgsCoordinateReferenceSystem.EpsgCrsId))
         QgsProject.instance().addMapLayer(layer)
-        
+
         if layer.isValid() is True:
             print("Layer was loaded successfully!")
-            box = layer.boundingBoxOfSelected()
-            iface.mapCanvas().setExtent(box)
-            iface.mapCanvas().refresh()
+            global zlayer
+            zlayer = QgsProject.instance().mapLayersByName(dxfName)[0]
+            iface.setActiveLayer(zlayer)
+            iface.zoomToActiveLayer()
         else:
             print("Unable to read basename and file path - Your string is probably invalid")
-        
+
     except Error as e:
         print("Error loading raster file")
         print(e)
@@ -178,24 +188,31 @@ def importFirstDXF():
 
 def downloadMap():
     try:
-        service_url = "mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" 
-        service_uri = "type=xyz&zmin=0&zmax=21&url=https://"+requests.utils.quote(service_url)
+        service_url = "mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
+        service_uri = "type=xyz&zmin=0&zmax=21&url=https://" + requests.utils.quote(service_url)
         tms_layer = QgsRasterLayer(service_uri, "Google Satellite", "wms")
         tms_later = QgsProject.instance().addMapLayer(tms_layer)
     except Exception as e:
         print("Map failed :(")
         print(e)
-        
+
 
 app = QApplication(sys.argv)
 ex = App()
 ex.close()
 CRS_ID = ex.getInteger()
 WORKDIR = ex.getText()
-#sys.exit(app.exec_())
+# sys.exit(app.exec_())
 
 importFirstTif()
+time.sleep(2.0) 
 downloadMap()
+time.sleep(2.0) 
 importFirstDXF()
+time.sleep(2.0) 
 importAllShapes()
+time.sleep(2.0) 
 iface.mainWindow().blockSignals(False)
+global zlayer
+iface.setActiveLayer(zlayer)
+iface.zoomToActiveLayer()
