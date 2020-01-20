@@ -40,7 +40,7 @@ import time
 iface.mainWindow().blockSignals(True)
 
 CRS_ID = 2154
-WORKDIR = "C:/Users/theo1/Documents/GitHub/Hackathon2020/mapdata/" # Ici, le chemin à changer
+WORKDIR = "C:/Users/theo1/Documents/GitHub/Hackathon2020/mapdata" # Ici, le chemin à changer
 All_Tifs = False
 All_DXF = False
 
@@ -304,20 +304,14 @@ if w_temp != None:
 #sys.exit(app.exec_())
 
 #if All_Tifs == False:
-if 1 == 2:
-    importFirstTif()
-else:
-    importAllTifs()
+importAllTifs()
     
 time.sleep(2.0) 
 downloadMap()
 time.sleep(2.0) 
 
 #if All_DXF == False:
-if 1 == 2:
-    importFirstDXF()
-else:
-    importAllDXF()
+importAllDXF()
     
 time.sleep(2.0) 
 importAllShapes()
