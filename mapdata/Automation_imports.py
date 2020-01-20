@@ -10,13 +10,14 @@
 *                                                                         *
 ***************************************************************************
 """
+
 from PyQt5.QtGui import *
 
 from PyQt5.QtCore import (QCoreApplication,
                           QFileInfo,
                           QSettings)
 
-from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QPushButton, QButtonGroup, QAbstractButton
+from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QPushButton, QButtonGroup, QAbstractButton, QFileDialog
 
 from qgis.core import (QgsProcessing,
                        QgsFeatureSink,
@@ -40,9 +41,7 @@ import time
 iface.mainWindow().blockSignals(True)
 
 CRS_ID = 2154
-WORKDIR = "C:/Users/theo1/Documents/GitHub/Hackathon2020/mapdata" # Ici, le chemin à changer
-All_Tifs = False
-All_DXF = False
+WORKDIR = "" # Ici, le chemin à changer
 
 ZLAYER = 0
 
@@ -51,7 +50,7 @@ class App(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.title = 'PyQt5 input dialogs - pythonspot.com'
+        self.title = 'Qgis Dialogs'
         self.left = 10
         self.top = 10
         self.width = 640
@@ -81,100 +80,34 @@ class App(QWidget):
 
 
     def getText(self):
-        text, okPressed = QInputDialog.getText(self, "WORKDIR", "Input your workfolder :", QLineEdit.Normal, "")
-        # get path. Must be an absolute path !
-        if okPressed and text != '':
-            if len(text) > 3:
-                WORKDIR = text
-                print(text)
-                return WORKDIR
-        else:
-            print(text)
-    
-    def returnTrue():
-        return True
-    
-    def returnFalse():
-        return False
-    
-    def allT(self):
-        b1 = QPushButton("Sceglie tutti i .tif")
-        b2 = QPushButton("Sceglie solu u primu .tif")
-
-        b1.clicked.connect(lambda: self.returnTrue())
-
-        b2.clicked.connect(lambda: self.returnFalse())
+        folder = str(QFileDialog.getExistingDirectory(self, "Pidate u WORKDIR")) # Waaaaaay better. Picks a directory
+        print(folder)
+        return folder
         
-    def allD(self):
-        b1 = QPushButton("Sceglie tutti i .dxf")
-        b2 = QPushButton("Sceglie solu u primu .dxf")
-
-        b1.clicked.connect(lambda: self.returnTrue())
-
-        b2.clicked.connect(lambda: self.returnFalse())
-        
-
-def importFirstTif():
-    # import the first Tif found in this folder
-    localfolder = os.listdir(WORKDIR)
-    tifName = ""
-
-    for file in localfolder:
-        if file[-4:] == ".tif" or file[-4:] == ".TIF":
-            tifName = file
-            break
-
-    print("TIFNAME : " + tifName)
-
-    try:
-        fileInfo = QFileInfo(WORKDIR + tifName)
-        path = fileInfo.filePath()
-        basename = fileInfo.baseName()
-        layer = QgsRasterLayer(path, basename)
-        crs = layer.crs()
-        crs.createFromId(4326)
-        layer.setCrs(crs)
-        # crs = QgsCoordinateReferenceSystem(4326, QgsCoordinateReferenceSystem.EpsgCrsId)
-        # layer.setCrs(QgsCoordinateReferenceSystem(CRS_ID, QgsCoordinateReferenceSystem.EpsgCrsId))
-        # for unknow reasons, the tif has a different Crs, but is lambert. OK.
-        # layer.setCrs()
-
-        QgsProject.instance().addMapLayer(layer)
-
-        if layer.isValid() is True:
-            print("Layer was loaded successfully!")
-        else:
-            print("Unable to read basename and file path - Your string is probably invalid")
-
-    except Exception as e:
-        print("Error loading raster file")
-        print(e)
-
 
 def importAllTifs():
-    # import the first Tif found in this folder
+    # import all Tif found in this folder
     localfolder = os.listdir(WORKDIR + '/tifs/')
     tifs = []
 
-    for file in localfolder:
-        if file[-4:] == ".tif" or file[-4:] == ".TIF":
-            tifs.append(file)
+    for tif in localfolder:
+        if tif[-4:] == ".tif" or tif[-4:] == ".TIF":
+            tifs.append(tif)
 
     print("Tifs Found : " + str(len(tifs)))
 
     try:
         for tif in tifs:
-            fileInfo = QFileInfo(WORKDIR + tif)
+            print(localfolder)
+            print(tif)
+
+            fileInfo = QFileInfo(WORKDIR + '/tifs/' + tif)
             path = fileInfo.filePath()
             basename = fileInfo.baseName()
             layer = QgsRasterLayer(path, basename)
             crs = layer.crs()
             crs.createFromId(4326)
             layer.setCrs(crs)
-            # crs = QgsCoordinateReferenceSystem(4326, QgsCoordinateReferenceSystem.EpsgCrsId)
-            # layer.setCrs(QgsCoordinateReferenceSystem(CRS_ID, QgsCoordinateReferenceSystem.EpsgCrsId))
-            # for unknow reasons, the tif has a different Crs, but is lambert. OK.
-            # layer.setCrs()
 
             QgsProject.instance().addMapLayer(layer)
 
@@ -194,15 +127,15 @@ def importAllShapes():
     shapesfolder = os.listdir(WORKDIR + '/shapes/')
     shapes = []
 
-    for file in shapesfolder:
-        if file[-4:] == ".SHP" or file[-4:] == ".shp":
-            shapes.append(file)
+    for shape in shapesfolder:
+        if shape[-4:] == ".SHP" or shape[-4:] == ".shp":
+            shapes.append(shape)
 
     try:
         for shapeF in shapes:
-            print(WORKDIR + "shapes/" + shapeF)
+            print(WORKDIR + "/shapes/" + shapeF)
 
-            path_to_ports_layer = WORKDIR + "shapes/" + shapeF
+            path_to_ports_layer = WORKDIR + "/shapes/" + shapeF
 
             # The format is:
             # vlayer = QgsVectorLayer(data_source, layer_name, provider_name)
@@ -215,54 +148,26 @@ def importAllShapes():
 
     except Exception as e:
         "An error occured when loading the shapes files"
-
-
-def importFirstDXF():
-    # import the first Tif found in this folder
-    localfolder = os.listdir(WORKDIR)
-    dxfName = ""
-
-    for file in localfolder:
-        if file[-4:] == ".dxf" or file[-4:] == ".DXF":
-            dxfName = file
-            break
-
-    try:
-        print(WORKDIR)
-        print(dxfName)
-        print(file)
-        layer = QgsVectorLayer(WORKDIR + dxfName + "|layername=entities|geometrytype=LineString", file, "ogr")
-        layer.setCrs(QgsCoordinateReferenceSystem(CRS_ID, QgsCoordinateReferenceSystem.EpsgCrsId))
-        QgsProject.instance().addMapLayer(layer)
-
-        if layer.isValid() is True:
-            print("Layer was loaded successfully!")
-            ZLAYER = QgsProject.instance().mapLayersByName(dxfName)[0]
-            iface.setActiveLayer(ZLAYER)
-            iface.zoomToActiveLayer()
-        else:
-            print("Unable to read basename and file path - Your string is probably invalid")
-
-    except Exception as e:
-        print("Error loading raster file")
         print(e)
 
 
 def importAllDXF():
     # import the first Tif found in this folder
     localfolder = os.listdir(WORKDIR + '/dxfs/')
+    # These lines allow you to set a breakpoint in the app
     dxfName = []
 
-    for file in localfolder:
-        if file[-4:] == ".dxf" or file[-4:] == ".DXF":
-            dxfName.append(file)
+    for dxf in localfolder:
+        if dxf[-4:] == ".dxf" or dxf[-4:] == ".DXF":
+            dxfName.append(dxf)
+    
+    print("DFX Found : " + str(len(dxfName)))
 
     try:
         for dxf in dxfName:
-            print(WORKDIR)
+            print(localfolder)
             print(dxf)
-            print(file)
-            layer = QgsVectorLayer(WORKDIR + dxf + "|layername=entities|geometrytype=LineString", file, "ogr")
+            layer = QgsVectorLayer(WORKDIR + '/dxfs/' + dxf + "|layername=entities|geometrytype=LineString", dxf, "ogr")
             layer.setCrs(QgsCoordinateReferenceSystem(CRS_ID, QgsCoordinateReferenceSystem.EpsgCrsId))
             QgsProject.instance().addMapLayer(layer)
 
