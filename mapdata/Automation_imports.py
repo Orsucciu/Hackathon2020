@@ -10,12 +10,13 @@
 *                                                                         *
 ***************************************************************************
 """
+from PyQt5.QtGui import *
 
 from PyQt5.QtCore import (QCoreApplication,
                           QFileInfo,
                           QSettings)
 
-from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit
+from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QPushButton, QButtonGroup, QAbstractButton
 
 from qgis.core import (QgsProcessing,
                        QgsFeatureSink,
@@ -37,6 +38,11 @@ import requests
 import time
 
 iface.mainWindow().blockSignals(True)
+
+CRS_ID = 2154
+WORKDIR = "C:/Users/theo1/Documents/GitHub/Hackathon2020/mapdata/" # Ici, le chemin à changer
+All_Tifs = False
+All_DXF = False
 
 ZLAYER = 0
 
@@ -83,10 +89,30 @@ class App(QWidget):
                 print(text)
                 return WORKDIR
         else:
-            WORKDIR = "C:/Users/theo1/Documents/GitHub/Hackathon2020/mapdata/"
             print(text)
-            return WORKDIR
+    
+    def returnTrue():
+        return True
+    
+    def returnFalse():
+        return False
+    
+    def allT(self):
+        b1 = QPushButton("Sceglie tutti i .tif")
+        b2 = QPushButton("Sceglie solu u primu .tif")
 
+        b1.clicked.connect(lambda: self.returnTrue())
+
+        b2.clicked.connect(lambda: self.returnFalse())
+        
+    def allD(self):
+        b1 = QPushButton("Sceglie tutti i .dxf")
+        b2 = QPushButton("Sceglie solu u primu .dxf")
+
+        b1.clicked.connect(lambda: self.returnTrue())
+
+        b2.clicked.connect(lambda: self.returnFalse())
+        
 
 def importFirstTif():
     # import the first Tif found in this folder
@@ -120,7 +146,44 @@ def importFirstTif():
         else:
             print("Unable to read basename and file path - Your string is probably invalid")
 
-    except Error as e:
+    except Exception as e:
+        print("Error loading raster file")
+        print(e)
+
+
+def importAllTifs():
+    # import the first Tif found in this folder
+    localfolder = os.listdir(WORKDIR + '/tifs/')
+    tifs = []
+
+    for file in localfolder:
+        if file[-4:] == ".tif" or file[-4:] == ".TIF":
+            tifs.append(file)
+
+    print("Tifs Found : " + str(len(tifs)))
+
+    try:
+        for tif in tifs:
+            fileInfo = QFileInfo(WORKDIR + tif)
+            path = fileInfo.filePath()
+            basename = fileInfo.baseName()
+            layer = QgsRasterLayer(path, basename)
+            crs = layer.crs()
+            crs.createFromId(4326)
+            layer.setCrs(crs)
+            # crs = QgsCoordinateReferenceSystem(4326, QgsCoordinateReferenceSystem.EpsgCrsId)
+            # layer.setCrs(QgsCoordinateReferenceSystem(CRS_ID, QgsCoordinateReferenceSystem.EpsgCrsId))
+            # for unknow reasons, the tif has a different Crs, but is lambert. OK.
+            # layer.setCrs()
+
+            QgsProject.instance().addMapLayer(layer)
+
+            if layer.isValid() is True:
+                print("Layer was loaded successfully!")
+            else:
+                print("Unable to read basename and file path - Your string is probably invalid")
+
+    except Exception as e:
         print("Error loading raster file")
         print(e)
 
@@ -150,7 +213,7 @@ def importAllShapes():
             if not vlayer.isValid():
                 print("Layer failed to load!")
 
-    except:
+    except Exception as e:
         "An error occured when loading the shapes files"
 
 
@@ -174,14 +237,44 @@ def importFirstDXF():
 
         if layer.isValid() is True:
             print("Layer was loaded successfully!")
-            global ZLAYER
             ZLAYER = QgsProject.instance().mapLayersByName(dxfName)[0]
             iface.setActiveLayer(ZLAYER)
             iface.zoomToActiveLayer()
         else:
             print("Unable to read basename and file path - Your string is probably invalid")
 
-    except Error as e:
+    except Exception as e:
+        print("Error loading raster file")
+        print(e)
+
+
+def importAllDXF():
+    # import the first Tif found in this folder
+    localfolder = os.listdir(WORKDIR + '/dxfs/')
+    dxfName = []
+
+    for file in localfolder:
+        if file[-4:] == ".dxf" or file[-4:] == ".DXF":
+            dxfName.append(file)
+
+    try:
+        for dxf in dxfName:
+            print(WORKDIR)
+            print(dxf)
+            print(file)
+            layer = QgsVectorLayer(WORKDIR + dxf + "|layername=entities|geometrytype=LineString", file, "ogr")
+            layer.setCrs(QgsCoordinateReferenceSystem(CRS_ID, QgsCoordinateReferenceSystem.EpsgCrsId))
+            QgsProject.instance().addMapLayer(layer)
+
+            if layer.isValid() is True:
+                print("Layer was loaded successfully!")
+                ZLAYER = QgsProject.instance().mapLayersByName(dxf)[0]
+                iface.setActiveLayer(ZLAYER)
+                iface.zoomToActiveLayer()
+            else:
+                print("Unable to read basename and file path - Your string is probably invalid")
+
+    except Exception as e:
         print("Error loading raster file")
         print(e)
 
@@ -191,7 +284,7 @@ def downloadMap():
         service_url = "mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
         service_uri = "type=xyz&zmin=0&zmax=21&url=https://" + requests.utils.quote(service_url)
         tms_layer = QgsRasterLayer(service_uri, "Google Satellite", "wms")
-        tms_later = QgsProject.instance().addMapLayer(tms_layer)
+        tms_layer = QgsProject.instance().addMapLayer(tms_layer)
     except Exception as e:
         print("Map failed :(")
         print(e)
@@ -201,17 +294,32 @@ app = QApplication(sys.argv)
 ex = App()
 ex.close()
 CRS_ID = ex.getInteger()
-WORKDIR = ex.getText()
-# sys.exit(app.exec_())
+w_temp = ex.getText()
 
-importFirstTif()
+if w_temp != None:
+    WORKDIR = w_temp
+
+#All_Tifs = ex.allT()
+#All_DXF = ex.allD()
+#sys.exit(app.exec_())
+
+#if All_Tifs == False:
+if 1 == 2:
+    importFirstTif()
+else:
+    importAllTifs()
+    
 time.sleep(2.0) 
 downloadMap()
 time.sleep(2.0) 
-importFirstDXF()
+
+#if All_DXF == False:
+if 1 == 2:
+    importFirstDXF()
+else:
+    importAllDXF()
+    
 time.sleep(2.0) 
 importAllShapes()
 time.sleep(2.0) 
 iface.mainWindow().blockSignals(False)
-iface.setActiveLayer(ZLAYER)
-iface.zoomToActiveLayer()
