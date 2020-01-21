@@ -87,8 +87,12 @@ class App(QWidget):
 
 def importAllTifs():
     # import all Tif found in this folder
-    localfolder = os.listdir(WORKDIR + '/tifs/')
-    tifs = []
+    if os.path.exists(WORKDIR + '/tifs/'):
+        localfolder = os.listdir(WORKDIR + '/tifs/')
+        tifs = []
+    else:
+        print("Tifs folder not foun !")
+        return False
 
     for tif in localfolder:
         if tif[-4:] == ".tif" or tif[-4:] == ".TIF":
@@ -124,8 +128,12 @@ def importAllTifs():
 def importAllShapes():
     # import all the shp files in the shapes folder
     # print(os.listdir(WORKDIR))
-    shapesfolder = os.listdir(WORKDIR + '/shapes/')
-    shapes = []
+    if os.path.exists(WORKDIR + '/shapes/'):
+        shapesfolder = os.listdir(WORKDIR + '/shapes/')
+        shapes = []
+    else:
+        print("Shapes folder not foun !")
+        return False
 
     for shape in shapesfolder:
         if shape[-4:] == ".SHP" or shape[-4:] == ".shp":
@@ -153,9 +161,12 @@ def importAllShapes():
 
 def importAllDXF():
     # import the first Tif found in this folder
-    localfolder = os.listdir(WORKDIR + '/dxfs/')
-    # These lines allow you to set a breakpoint in the app
-    dxfName = []
+    if os.path.exists(WORKDIR + '/dxfs/'):
+        localfolder = os.listdir(WORKDIR + '/dxfs/')
+        dxfName = []
+    else:
+        print("Dxfs folder not foun !")
+        return False
 
     for dxf in localfolder:
         if dxf[-4:] == ".dxf" or dxf[-4:] == ".DXF":
@@ -222,3 +233,6 @@ time.sleep(2.0)
 importAllShapes()
 time.sleep(2.0) 
 iface.mainWindow().blockSignals(False)
+
+proj = QgsProject.instance()
+proj.write(WORKDIR + "prughjettu.qgz")
